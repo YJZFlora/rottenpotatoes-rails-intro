@@ -48,8 +48,9 @@ class MoviesController < ApplicationController
     redirect_to movies_path
   end
 
-  private
 
+  private
+  
   def check
     if params[:ratings]
       params[:ratings].keys
