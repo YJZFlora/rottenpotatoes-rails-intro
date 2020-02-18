@@ -6,19 +6,20 @@ class MoviesController < ApplicationController
     # will render app/views/movies/show.<extension> by default
   end
 
-  def index
-    @all_ratings = Movie.order(:rating).select(:rating).map(&:rating).uniq
-    @checked_ratings = check
-    @checked_ratings.each do |rating|
-      params[rating] = true
-    end
 
-    if params[:sort]
-      @movies = Movie.order(params[:sort])
-    else
-      @movies = Movie.where(:rating => @checked_ratings)
+  def index
+    @all_ratings = Movie.all_ratings
+    @sort = params[:sort] || session[:sort]
+    @ratings = params[:ratings]  || session[:ratings] || all_ratings
+    @movies = Movie.where( { rating: @ratings.keys } ).order(@sort)
+    session[:sort], session[:ratings] = @sort, @ratings
+
+    if params[:sort] != session[:sort] or params[:ratings] != session[:ratings]
+      flash.keep
+      redirect_to movies_path sort: @sort, ratings: @ratings
     end
   end
+
 
   def new
     # default: render 'new' template
@@ -50,13 +51,11 @@ class MoviesController < ApplicationController
 
 
   private
-  
-  def check
-    if params[:ratings]
-      params[:ratings].keys
-    else
-      @all_ratings
-    end
+
+  def all_ratings
+    hash = {}
+    @all_ratings.each { |val| hash[val] = '1' }
+    hash
   end
 
 end
